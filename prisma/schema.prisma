@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model authors {
+  id Int @id @default(autoincrement())
+  uid String @unique @default(uuid())
+  external_id String
+  name String
+  email String
+  phone_number String
+  metadata Json
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  messages messages[]
+  payment_transactions payment_transactions[]
+}
+
+model messages {
+  id Int @id @default(autoincrement())
+  uid String @unique @default(uuid())
+  author_id Int
+  author authors @relation(fields: [author_id], references: [id])
+  content String
+  to String
+  channel channels
+  allow_reply Boolean
+  rejected_reason String?
+  metadata Json
+  status message_status
+  payment_transaction payment_transactions?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+enum message_status {
+  in_review
+  rejected
+  pending
+  sent
+  delivered
+  failed
+}
+
+enum channels {
+  sms
+  email
+  whatsapp
+}
+
+model payment_transactions {
+  id Int @id @default(autoincrement())
+  uid String @unique @default(uuid())
+  message_id Int @unique
+  message messages @relation(fields: [message_id], references: [id])
+  author_id Int
+  author authors @relation(fields: [author_id], references: [id])
+  amount Decimal @db.Decimal(10, 2)
+  status String
+  method payment_methods
+  external_code String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+enum payment_methods {
+  pix
+  credit_card
+  debit_card
+}
+
